@@ -880,16 +880,6 @@ COSIGN_CONTAINERS = [
 
 _NGINX_APP_VERSION = "latest" if OS_VERSION == "tumbleweed" else "1.21"
 
-PR_NGINX_CONTAINERS = [
-    create_BCI(
-        build_tag="private-registry/harbor-nginx:1.21",
-        bci_type=ImageType.APPLICATION,
-        available_versions=("15.6-pr",),
-        forwarded_ports=[PortForwarding(container_port=80)],
-        custom_entry_point="/bin/sh",
-    ),
-]
-
 APP_NGINX_CONTAINERS = [
     create_BCI(
         build_tag=f"{APP_CONTAINER_PREFIX}/nginx:{_NGINX_APP_VERSION}",
@@ -897,8 +887,6 @@ APP_NGINX_CONTAINERS = [
         forwarded_ports=[PortForwarding(container_port=80)],
     ),
 ]
-
-NGINX_CONTAINERS = APP_NGINX_CONTAINERS + PR_NGINX_CONTAINERS
 
 KUBECTL_CONTAINERS = [
     create_BCI(
@@ -1115,17 +1103,6 @@ APP_VALKEY_CONTAINERS = [
     )
 ]
 
-PR_VALKEY_CONTAINERS = [
-    create_BCI(
-        build_tag="private-registry/harbor-valkey:latest",
-        bci_type=ImageType.APPLICATION,
-        available_versions=("15.6-pr",),
-        forwarded_ports=[PortForwarding(container_port=6379)],
-    )
-]
-
-VALKEY_CONTAINERS = APP_VALKEY_CONTAINERS + PR_VALKEY_CONTAINERS
-
 BIND_CONTAINERS = [
     create_BCI(
         build_tag=f"{APP_CONTAINER_PREFIX}/bind:9",
@@ -1228,7 +1205,6 @@ CONTAINERS_WITH_ZYPPER = (
     + LTSS_BASE_CONTAINERS
     + LTSS_BASE_FIPS_CONTAINERS
     + APP_NGINX_CONTAINERS
-    + PR_NGINX_CONTAINERS
     + NODEJS_CONTAINERS
     + OPENJDK_CONTAINERS
     + OPENJDK_DEVEL_CONTAINERS
@@ -1245,7 +1221,8 @@ CONTAINERS_WITH_ZYPPER = (
 CONTAINERS_WITH_ZYPPER_AS_ROOT = []
 for param in CONTAINERS_WITH_ZYPPER:
     # only modify the user for containers where `USER` is explicitly set,
-    if param not in PR_NGINX_CONTAINERS:
+    # atm this is no container
+    if param not in []:
         CONTAINERS_WITH_ZYPPER_AS_ROOT.append(param)
     else:
         ctr, marks = container_and_marks_from_pytest_param(param)
@@ -1290,7 +1267,7 @@ CONTAINERS_WITHOUT_ZYPPER = [
     *PROMETHEUS_CONTAINERS,
     *SAMBA_CONTAINERS,
     STUNNEL_CONTAINER,
-    *VALKEY_CONTAINERS,
+    *APP_VALKEY_CONTAINERS,
     SUSE_AI_OBSERVABILITY_EXTENSION_RUNTIME,
     SUSE_AI_OBSERVABILITY_EXTENSION_SETUP,
 ]
@@ -1359,7 +1336,7 @@ else:
         + APP_VALKEY_CONTAINERS
     )
 
-ACC_CONTAINERS = POSTGRESQL_CONTAINERS + PR_NGINX_CONTAINERS
+ACC_CONTAINERS = POSTGRESQL_CONTAINERS
 
 #: Containers pulled from registry.suse.de
 ALL_CONTAINERS = CONTAINERS_WITH_ZYPPER + CONTAINERS_WITHOUT_ZYPPER
