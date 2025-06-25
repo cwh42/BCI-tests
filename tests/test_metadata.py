@@ -25,6 +25,7 @@ import requests
 from _pytest.mark.structures import ParameterSet
 from pytest_container import OciRuntimeBase
 from pytest_container.container import ContainerData
+from pytest_container.container import container_and_marks_from_pytest_param
 from pytest_container.runtime import LOCALHOST
 
 from bci_tester.data import ACC_CONTAINERS
@@ -93,6 +94,7 @@ from bci_tester.data import SAMBA_CLIENT_CONTAINERS
 from bci_tester.data import SAMBA_SERVER_CONTAINERS
 from bci_tester.data import SAMBA_TOOLBOX_CONTAINERS
 from bci_tester.data import SPACK_CONTAINERS
+from bci_tester.data import SPR_CONTAINERS
 from bci_tester.data import STUNNEL_CONTAINER
 from bci_tester.data import SUSE_AI_OBSERVABILITY_EXTENSION_RUNTIME
 from bci_tester.data import SUSE_AI_OBSERVABILITY_EXTENSION_SETUP
@@ -321,9 +323,17 @@ IMAGES_AND_NAMES: List[ParameterSet] = [
     + [
         (samba_ctr, "samba-toolbox", ImageType.APPLICATION)
         for samba_ctr in SAMBA_TOOLBOX_CONTAINERS
+    + [
+        (
+            pr_ctr,
+            container_and_marks_from_pytest_param(pr_ctr)[0]
+            .baseurl.rpartition("/")[2]
+            .rpartition(":")[0],
+            ImageType.APPLICATION,
+        )
+        for pr_ctr in SPR_CONTAINERS
     ]
 ]
-
 
 assert len(ALL_CONTAINERS) == len(IMAGES_AND_NAMES), (
     "IMAGES_AND_NAMES must have all containers from ALL_CONTAINERS"
@@ -793,9 +803,22 @@ def test_oci_base_refs(
     base_repository = base_name.partition(":")[0]
 
     assert base_name.startswith("registry.suse.com/")
-    assert f":{OS_VERSION_ID}" in base_name, (
-        "Base image reference is not the expected version"
-    )
+
+    # Skip this test for images based on the nginx image
+    # abusing the title label to get the container name
+    if OS_VERSION in ("15.6-pr",) and any(
+        lbl in labels
+        for lbl in (
+            "com.suse.application.harbor-nginx.title",
+            "com.suse.application.harbor-portal.title",
+        )
+    ):
+        pass
+    else:
+        assert f":{OS_VERSION_ID}" in base_name, (
+            "Base image reference is not the expected version"
+        )
+
     assert base_digest.startswith("sha256:")
 
     if PODMAN_SELECTED and container_runtime.version.major < 3:
