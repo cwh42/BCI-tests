@@ -195,6 +195,7 @@ markers = [
     'harbor-exporter_latest',
     'harbor-trivy-adapter_latest',
     'harbor-nginx_latest',
+    'xorg-client_21',
 ]
 
 [tool.ruff]
