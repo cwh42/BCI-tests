@@ -323,6 +323,7 @@ IMAGES_AND_NAMES: List[ParameterSet] = [
     + [
         (samba_ctr, "samba-toolbox", ImageType.APPLICATION)
         for samba_ctr in SAMBA_TOOLBOX_CONTAINERS
+    ]
     + [
         (
             pr_ctr,
