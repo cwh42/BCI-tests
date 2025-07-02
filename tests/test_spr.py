@@ -9,6 +9,7 @@ provided by the core container and test for the overall status being "healthy".
 import pytest
 import requests
 import tenacity
+from pytest_container.container import EntrypointSelection
 from pytest_container.container import PortForwarding
 from pytest_container.container import container_and_marks_from_pytest_param
 from pytest_container.pod import Pod
@@ -16,10 +17,14 @@ from pytest_container.pod import PodData
 
 from bci_tester.data import SPR_CONTAINERS
 
+SPR_CONTAINERS_FOR_POD = []
+for param in SPR_CONTAINERS:
+    ctr = container_and_marks_from_pytest_param(param)[0]
+    ctr.entry_point = EntrypointSelection.AUTO
+    SPR_CONTAINERS_FOR_POD.append(ctr)
+
 HARBOR_POD = Pod(
-    containers=[
-        container_and_marks_from_pytest_param(ctr)[0] for ctr in SPR_CONTAINERS
-    ],
+    containers=SPR_CONTAINERS_FOR_POD,
     forwarded_ports=[
         PortForwarding(container_port=8080),
         PortForwarding(container_port=9090),

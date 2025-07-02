@@ -12,6 +12,7 @@ from pytest_container import BindMount
 from pytest_container import Container
 from pytest_container import DerivedContainer
 from pytest_container.container import ContainerVolume
+from pytest_container.container import EntrypointSelection
 from pytest_container.container import PortForwarding
 from pytest_container.container import container_and_marks_from_pytest_param
 from pytest_container.inspect import NetworkProtocol
@@ -1411,6 +1412,12 @@ for img, conf in SPR_CONFIG.items():
             build_tag=f"private-registry/harbor-{img}:latest",
             volume_mounts=conf["volumes"],
             extra_launch_args=launch_args,
+            # SPR containers except 'db' need bash as entrypoint to run standalone, needed for metadata & all tests
+            entry_point=(
+                EntrypointSelection.AUTO
+                if img == "db"
+                else EntrypointSelection.BASH
+            ),
         )
     )
 
