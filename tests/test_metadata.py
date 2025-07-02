@@ -572,6 +572,8 @@ def test_disturl(
         )
     elif OS_VERSION == "15.6-ai" and TARGET in ("ibs", "obs"):
         assert "obs://build.suse.de/Devel:AI" in disturl
+    elif OS_VERSION == "15.6-pr" and TARGET in ("ibs", "obs"):
+        assert "obs://build.suse.de/Devel:SCC:PrivateRegistry" in disturl
     elif OS_VERSION == "16.0":
         if baseurl.netloc == "registry.opensuse.org":
             assert (
